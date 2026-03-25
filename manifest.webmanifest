@@ -1,0 +1,1 @@
+{"name":"Strike Habit Tracker","short_name":"Strike","description":"Local-first habit tracker","start_url":"/streaks-app/","display":"standalone","background_color":"#0E0E0E","theme_color":"#0E0E0E","lang":"en","scope":"/streaks-app/","icons":[{"src":"icon.svg","sizes":"any","type":"image/svg+xml","purpose":"any maskable"}]}
