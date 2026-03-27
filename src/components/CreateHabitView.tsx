@@ -4,9 +4,11 @@ import { Button } from './ui/Button';
 import { Input } from './ui/Input';
 import { getGoalFromTitle } from '../utils/goalParser';
 import { DynamicGoalShape } from './ui/DynamicGoalShape';
+import { useTranslation } from '../hooks/useTranslation';
 
 export function CreateHabitView({ onDone }: { onDone: () => void }) {
   const { addHabit } = useHabits();
+  const { t } = useTranslation();
   const [title, setTitle] = useState('');
 
   const target = getGoalFromTitle(title);
@@ -25,16 +27,16 @@ export function CreateHabitView({ onDone }: { onDone: () => void }) {
       </div>
 
       <h2 className="text-display font-bold text-4xl mb-4 text-primary tracking-tight text-center">
-        Forge a New Monolith
+        {t('create_habit_forge')}
       </h2>
       <p className="text-on-surface-variant mb-12 text-lg text-center">
-        Extract numbers to create fractional goals.
+        {t('create_habit_extract')}
       </p>
       
       <form onSubmit={submit} className="w-full space-y-12 flex flex-col">
         <Input 
           autoFocus
-          placeholder="e.g. Meditate for 15 minutes"
+          placeholder={t('create_habit_placeholder')}
           value={title}
           onChange={e => setTitle(e.target.value)}
         />
@@ -46,7 +48,7 @@ export function CreateHabitView({ onDone }: { onDone: () => void }) {
             disabled={!title.trim()}
             className="w-full bg-primary-gradient shadow-ambient"
           >
-            Create Strike
+            {t('create_habit_button')}
           </Button>
         </div>
       </form>

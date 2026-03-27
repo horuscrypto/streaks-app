@@ -4,10 +4,12 @@ import { useHabits } from '../hooks/useHabits';
 import { Card } from './ui/Card';
 import { Button } from './ui/Button';
 import { CreateEntryView } from './CreateEntryView';
+import { useTranslation } from '../hooks/useTranslation';
 
 export function JournalView() {
   const { entries, deleteEntry } = useJournal();
   const { habits } = useHabits();
+  const { t } = useTranslation();
   const [isCreating, setIsCreating] = useState(false);
 
   if (isCreating) {
@@ -15,7 +17,7 @@ export function JournalView() {
   }
 
   const getHabitTitle = (id: string) => {
-    return habits.find(h => h.id === id)?.title || 'Unknown Strike';
+    return habits.find(h => h.id === id)?.title || t('journal_unknown');
   };
 
   return (
@@ -23,20 +25,20 @@ export function JournalView() {
       <div className="flex justify-between items-end mb-12">
         <div>
           <h2 className="text-display font-bold text-4xl mb-4 text-primary tracking-tight">
-            Diary
+            {t('journal_title')}
           </h2>
           <p className="text-on-surface-variant text-lg">
-            Document your descent.
+            {t('journal_subtitle')}
           </p>
         </div>
         <Button onClick={() => setIsCreating(true)} size="sm" className="mb-2 bg-on-surface text-surface hover:bg-white border-0 rounded-full font-bold px-6">
-          + Note
+          {t('habit_add_note')}
         </Button>
       </div>
 
       {entries.length === 0 ? (
         <div className="text-center text-outline-variant py-12 border border-dashed border-outline-variant rounded-xl">
-          Nothing logged yet.
+          {t('journal_empty')}
         </div>
       ) : (
         <div className="space-y-8">

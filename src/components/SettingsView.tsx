@@ -1,19 +1,27 @@
 import { useState, useEffect } from 'react';
 import { useSound, type AudioProfileName } from '../hooks/useSound';
 import { cn } from './ui/Button';
-
-const PROFILES: { id: AudioProfileName; label: string; desc: string }[] = [
-  { id: 'mute', label: 'Silenced', desc: 'No sound, pure silent operation' },
-  { id: 'soft-ding', label: 'Soft Ding', desc: 'A minimal, gentle tap' },
-  { id: 'wood-tap', label: 'Wooden Tap', desc: 'A very dry, organic woody click' },
-  { id: 'subtle-chime', label: 'Subtle Chime', desc: 'A clean, barely-there sine wave chime' },
-];
+import { useTranslation, type Language } from '../hooks/useTranslation';
 
 export function SettingsView() {
+  const { t, language, setLanguage } = useTranslation();
   const [profile, setProfile] = useState<AudioProfileName>('mute');
   const [remindersEnabled, setRemindersEnabled] = useState(false);
   const [reminderTime, setReminderTime] = useState('20:00');
   const { playStrikeSound } = useSound();
+
+  const PROFILES: { id: AudioProfileName; label: string; desc: string }[] = [
+    { id: 'mute', label: t('audio_mute'), desc: t('audio_mute_desc') },
+    { id: 'soft-ding', label: t('audio_ding'), desc: t('audio_ding_desc') },
+    { id: 'wood-tap', label: t('audio_wood'), desc: t('audio_wood_desc') },
+    { id: 'subtle-chime', label: t('audio_chime'), desc: t('audio_chime_desc') },
+  ];
+
+  const LANGUAGES: { id: Language; label: string }[] = [
+    { id: 'en', label: 'English' },
+    { id: 'it', label: 'Italiano' },
+    { id: 'pt', label: 'Português' },
+  ];
 
   useEffect(() => {
     const saved = localStorage.getItem('strike_audio_profile') as AudioProfileName;
@@ -35,15 +43,35 @@ export function SettingsView() {
   return (
     <div className="pt-20 px-6 pb-32 min-h-[80vh] flex flex-col max-w-lg mx-auto">
       <h2 className="text-display font-bold text-4xl mb-4 text-primary tracking-tight">
-        Settings
+        {t('settings_title')}
       </h2>
       <p className="text-on-surface-variant mb-12 text-lg">
-        Configure your monolithic experience.
+        {t('settings_subtitle')}
       </p>
 
       <div className="space-y-12">
         <section>
-          <h3 className="text-xs font-bold uppercase tracking-widest text-outline-variant mb-6">Acoustic Feedback</h3>
+          <h3 className="text-xs font-bold uppercase tracking-widest text-outline-variant mb-6">{t('settings_language')}</h3>
+          <div className="grid grid-cols-3 gap-3">
+            {LANGUAGES.map(lang => (
+              <button
+                key={lang.id}
+                onClick={() => setLanguage(lang.id)}
+                className={cn(
+                  "py-3 px-2 rounded-xl border text-xs font-bold transition-all uppercase tracking-wider",
+                  language === lang.id
+                    ? "bg-primary text-surface border-primary shadow-ambient"
+                    : "bg-surface-container-low border-transparent text-on-surface-variant hover:border-outline-variant"
+                )}
+              >
+                {lang.label}
+              </button>
+            ))}
+          </div>
+        </section>
+
+        <section>
+          <h3 className="text-xs font-bold uppercase tracking-widest text-outline-variant mb-6">{t('settings_acoustic')}</h3>
           <div className="space-y-3">
             {PROFILES.map(p => (
               <button
@@ -67,12 +95,12 @@ export function SettingsView() {
         </section>
 
         <section>
-          <h3 className="text-xs font-bold uppercase tracking-widest text-outline-variant mb-6">Reminders</h3>
+          <h3 className="text-xs font-bold uppercase tracking-widest text-outline-variant mb-6">{t('settings_reminders')}</h3>
           <div className="bg-surface-container-low p-6 rounded-3xl border border-transparent hover:border-outline-variant transition-colors flex flex-col gap-8">
             <div className="flex justify-between items-center">
               <div>
-                <span className="font-display text-xl text-primary block">Daily Rituals</span>
-                <p className="text-on-surface-variant text-sm mt-1">Get a nudge to strike the monolith.</p>
+                <span className="font-display text-xl text-primary block">{t('settings_daily_rituals')}</span>
+                <p className="text-on-surface-variant text-sm mt-1">{t('settings_nudge')}</p>
               </div>
               <button 
                 onClick={async () => {
@@ -95,7 +123,7 @@ export function SettingsView() {
 
             {remindersEnabled && (
               <div className="flex justify-between items-center pt-6 border-t border-white/5 animate-in slide-in-from-top-4 duration-300">
-                <span className="text-xs font-bold uppercase tracking-widest text-outline-variant">Remind Me At</span>
+                <span className="text-xs font-bold uppercase tracking-widest text-outline-variant">{t('settings_remind_at')}</span>
                 <input 
                   type="time" 
                   value={reminderTime} 

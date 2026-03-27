@@ -4,13 +4,22 @@ interface Props {
   target: number | null;
   progress: number;
   className?: string;
+  onSelect?: (index: number) => void;
 }
 
-export function DynamicGoalShape({ target, progress, className }: Props) {
+export function DynamicGoalShape({ target, progress, className, onSelect }: Props) {
   if (!target || target <= 1) {
+    const isCompleted = progress >= 1;
     return (
-      <svg viewBox="0 0 100 100" className={cn("w-full h-full", className)}>
-        <circle cx="50" cy="50" r="40" fill={progress >= 1 ? "#FFFFFF" : "#1a1c1c"} stroke={progress >= 1 ? "#FFFFFF" : "#333333"} strokeWidth="2" className="transition-colors duration-500" />
+      <svg viewBox="0 0 100 100" className={cn("w-full h-full cursor-pointer", className)}>
+        <circle 
+          cx="50" cy="50" r="40" 
+          fill={isCompleted ? "#FFFFFF" : "#1a1c1c"} 
+          stroke={isCompleted ? "#FFFFFF" : "#333333"} 
+          strokeWidth="2" 
+          className="transition-colors duration-500"
+          onClick={() => onSelect?.(0)}
+        />
       </svg>
     );
   }
@@ -39,7 +48,8 @@ export function DynamicGoalShape({ target, progress, className }: Props) {
                 fill={isFilled ? "#FFFFFF" : "#1a1c1c"} 
                 stroke={isFilled ? "#FFFFFF" : "#333333"} 
                 strokeWidth="1.5"
-                className="transition-colors duration-500"
+                className="transition-colors duration-500 cursor-pointer"
+                onClick={() => onSelect?.(i)}
               />
             </g>
           );

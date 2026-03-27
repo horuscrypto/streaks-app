@@ -8,8 +8,10 @@ import { useSound } from '../hooks/useSound';
 import { getGoalFromTitle } from '../utils/goalParser';
 import { DynamicGoalShape } from './ui/DynamicGoalShape';
 import { CreateEntryView } from './CreateEntryView';
+import { useTranslation } from '../hooks/useTranslation';
 
 export function HabitDetailView({ habitId, onClose }: { habitId: string; onClose: () => void }) {
+  const { t } = useTranslation();
   const habit = useLiveQuery(() => db.habits.get(habitId), [habitId]);
   const { strikes, toggleStrike, decrementStrike } = useStrikes(habitId);
   const { entries } = useJournal(habitId);
@@ -19,18 +21,44 @@ export function HabitDetailView({ habitId, onClose }: { habitId: string; onClose
   
   const target = habit ? getGoalFromTitle(habit.title) : null;
   const today = new Date().toISOString().split('T')[0];
-  const todayStrike = strikes.find(s => s.dateCompleted === today);
+  const todayStrike = strikes.find((s: any) => s.dateCompleted === today);
   const currentProgress = todayStrike?.progress || 0;
-  const totalCompletedDays = strikes.filter(s => target ? (s.progress || 0) >= target : true).length;
+  const totalCompletedDays = strikes.filter((s: any) => target ? (s.progress || 0) >= target : true).length;
 
-  const handleAdd = async () => {
-    const hitNewLevel = await toggleStrike(today, 5, target);
-    if (hitNewLevel) playStrikeSound();
-  }
-  
-  const handleSubtract = async () => {
-    await decrementStrike(today, 5);
-  }
+  const toggleFullStrike = async (dateStr: string) => {
+    window.navigator.vibrate?.(10);
+    const existing = strikes.find((s: any) => s.dateCompleted === dateStr);
+    if (existing) {
+      await db.strikes.delete(existing.id);
+    } else {
+      await db.strikes.add({
+        id: crypto.randomUUID(),
+        habitId,
+        dateCompleted: dateStr,
+        timestamp: Date.now(),
+        progress: target ? target : 1
+      });
+      playStrikeSound();
+    }
+  };
+
+  const handleCircleSelect = async (index: number) => {
+    window.navigator.vibrate?.(10);
+    if (target && target > 1) {
+      const targetProgress = Math.min((index + 1) * 5, target);
+      const existing = strikes.find((s: any) => s.dateCompleted === today);
+      
+      if (!existing || (existing.progress || 0) < targetProgress) {
+        const needed = targetProgress - (existing?.progress || 0);
+        const hitNewLevel = await toggleStrike(today, needed, target);
+        if (hitNewLevel) playStrikeSound();
+      } else {
+        await decrementStrike(today, 5);
+      }
+    } else {
+      await toggleFullStrike(today);
+    }
+  };
 
   if (!habit) return null;
 
@@ -38,30 +66,29 @@ export function HabitDetailView({ habitId, onClose }: { habitId: string; onClose
     <div className="fixed inset-0 z-50 bg-surface-container-lowest flex flex-col pt-12 overflow-y-auto animate-in fade-in duration-300">
       <div className="px-6 flex justify-between items-center mb-8 shrink-0">
         <button onClick={onClose} className="text-on-surface-variant uppercase font-bold text-xs tracking-widest hover:text-primary p-2 -ml-2">
-          ← Back
+          ← {t('habit_back')}
         </button>
       </div>
       
       <div className="flex-1 px-6 pb-32 flex flex-col items-center">
         <div className="flex justify-center mb-12 w-full max-w-sm">
-          <DynamicGoalShape target={target} progress={currentProgress} className="w-48 h-48 opacity-90 mx-auto" />
+          <DynamicGoalShape 
+            target={target} 
+            progress={currentProgress} 
+            className="w-48 h-48 opacity-90 mx-auto"
+            onSelect={handleCircleSelect}
+          />
         </div>
         
         <h1 className="text-display font-bold text-3xl sm:text-4xl text-primary text-center mb-12">
           {habit.title}
         </h1>
 
-        <div className="flex items-center justify-center gap-4 sm:gap-6 mb-16">
-          <button onClick={handleSubtract} className="h-16 px-6 rounded-full border-2 border-surface flex items-center justify-center text-xl font-bold text-outline-variant hover:text-primary hover:border-outline-variant active:scale-95 transition-all">
-            {target && target > 1 ? '-5 Units' : '-'}
-          </button>
+        <div className="flex items-center justify-center mb-16">
           <div className="flex flex-col items-center min-w-[100px]">
             <span className="text-display font-bold text-6xl text-primary">{totalCompletedDays}</span>
-            <span className="text-xs font-bold uppercase tracking-widest text-outline-variant mt-2">Total Strikes</span>
+            <span className="text-xs font-bold uppercase tracking-widest text-outline-variant mt-2">{t('habit_total_strikes')}</span>
           </div>
-          <button onClick={handleAdd} className="h-16 px-6 rounded-full bg-surface-container-high flex items-center justify-center text-xl font-bold text-primary active:scale-95 transition-all shadow-ambient">
-            {target && target > 1 ? '+5 Units' : '+'}
-          </button>
         </div>
 
         {/* Minimalist Calendar */}
@@ -91,15 +118,16 @@ export function HabitDetailView({ habitId, onClose }: { habitId: string; onClose
             {Array.from({length: new Date(viewDate.getFullYear(), viewDate.getMonth() + 1, 0).getDate()}).map((_, i) => {
               const day = i + 1;
               const dateStr = `${viewDate.getFullYear()}-${String(viewDate.getMonth() + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-              const isStruck = strikes.some(s => s.dateCompleted === dateStr);
+              const isStruck = strikes.some((s: any) => s.dateCompleted === dateStr && (target ? (s.progress || 0) >= target : true));
               return (
                 <div 
                   key={dateStr} 
                   className={cn(
-                    "aspect-square rounded-sm transition-colors duration-500",
+                    "aspect-square rounded-sm transition-colors duration-500 cursor-pointer",
                     isStruck ? "bg-primary" : "bg-surface"
                   )}
                   title={dateStr}
+                  onClick={() => toggleFullStrike(dateStr)}
                 />
               );
             })}
@@ -111,18 +139,18 @@ export function HabitDetailView({ habitId, onClose }: { habitId: string; onClose
           <div className="flex justify-between items-center mb-8 px-2">
             <div className="w-12" /> {/* Spacer */}
             <h3 className="text-xl font-bold font-display text-primary text-center">
-              Diary
+              {t('habit_diary_section')}
             </h3>
             <Button 
               onClick={() => setIsAddingNote(true)} 
               size="sm" 
               className="bg-on-surface text-surface hover:bg-white border-0 rounded-full font-bold px-4 h-8 text-[10px] uppercase tracking-wider"
             >
-              + Note
+              {t('habit_add_note')}
             </Button>
           </div>
           {entries.length === 0 ? (
-            <p className="text-center text-outline-variant text-sm italic">No entries documented.</p>
+            <p className="text-center text-outline-variant text-sm italic">{t('habit_no_entries')}</p>
           ) : (
             <div className="space-y-6">
               {entries.map(e => (
@@ -146,7 +174,7 @@ export function HabitDetailView({ habitId, onClose }: { habitId: string; onClose
       </div>
 
       {isAddingNote && (
-        <div className="fixed inset-0 z-[60] bg-surface-container-lowest animate-in slide-in-from-bottom duration-500">
+        <div className="fixed inset-0 z-[60] bg-surface-container-lowest animate-in slide-in-from-bottom duration-500 overflow-y-auto">
           <CreateEntryView onDone={() => setIsAddingNote(false)} initialHabitId={habitId} />
           <button onClick={() => setIsAddingNote(false)} className="absolute top-12 left-6 text-on-surface-variant uppercase font-bold text-xs tracking-widest hover:text-primary p-2">
             Cancel

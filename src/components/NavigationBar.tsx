@@ -1,5 +1,6 @@
 import { Home, PlusSquare, BookOpen, Settings } from 'lucide-react';
 import { cn } from './ui/Button';
+import { useTranslation } from '../hooks/useTranslation';
 
 interface NavProps {
   currentTab: 'home' | 'create' | 'journal' | 'settings';
@@ -7,11 +8,12 @@ interface NavProps {
 }
 
 export function NavigationBar({ currentTab, onChange }: NavProps) {
+  const { t } = useTranslation();
   const tabs = [
-    { id: 'home', icon: Home, label: 'Momentum' },
-    { id: 'journal', icon: BookOpen, label: 'Diary' },
-    { id: 'create', icon: PlusSquare, label: 'New Strike' },
-    { id: 'settings', icon: Settings, label: 'Settings' }
+    { id: 'home', icon: Home, label: t('nav_momentum') },
+    { id: 'journal', icon: BookOpen, label: t('nav_diary') },
+    { id: 'create', icon: PlusSquare, label: t('nav_new') },
+    { id: 'settings', icon: Settings, label: t('nav_settings') }
   ] as const;
 
   return (

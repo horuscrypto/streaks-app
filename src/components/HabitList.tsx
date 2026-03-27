@@ -8,10 +8,12 @@ import { HabitDetailView } from './HabitDetailView';
 import { SocraticFooter } from './ui/SocraticFooter';
 import { getGoalFromTitle } from '../utils/goalParser';
 import { DynamicGoalShape } from './ui/DynamicGoalShape';
+import { useTranslation } from '../hooks/useTranslation';
 
 function HabitItem({ habit, index, listLayout, onClick }: { habit: Habit, index: number, listLayout: 'extended' | 'compact', onClick: () => void }) {
   const { strikes, toggleStrike } = useStrikes(habit.id);
   const { playStrikeSound } = useSound();
+  const { t } = useTranslation();
   const today = new Date().toISOString().split('T')[0];
   
   const target = getGoalFromTitle(habit.title);
@@ -31,7 +33,7 @@ function HabitItem({ habit, index, listLayout, onClick }: { habit: Habit, index:
       <Card onClick={onClick} className={cn("cursor-pointer flex flex-col justify-between p-4 group min-h-[120px] border border-transparent hover:border-outline-variant transition-all duration-300 active:scale-[0.98]", index % 2 !== 0 ? "bg-surface-container-low" : "bg-surface-container")}>
         <div className="flex items-start justify-between">
           <div className="flex gap-2 items-center">
-            <button onClick={handleFastStrike} className="w-9 h-9 shrink-0 hover:scale-105 active:scale-90 transition-transform" title="Add 5 Units">
+            <button onClick={handleFastStrike} className="w-9 h-9 shrink-0 hover:scale-105 active:scale-90 transition-transform" title={target ? "+5" : "Strike"}>
               <DynamicGoalShape target={target} progress={currentProgress} />
             </button>
             {target && target > 1 && !isCompletedToday && (
@@ -41,7 +43,7 @@ function HabitItem({ habit, index, listLayout, onClick }: { habit: Habit, index:
                   toggleStrike(today, target, target).then(played => played && playStrikeSound());
                 }}
                 className="w-8 h-8 rounded-full bg-white text-black flex items-center justify-center font-bold text-lg active:scale-90 transition-transform shadow-ambient"
-                title="Complete Full Strike"
+                title="Full Strike"
               >
                 +
               </button>
@@ -64,7 +66,7 @@ function HabitItem({ habit, index, listLayout, onClick }: { habit: Habit, index:
       <div className="z-10 flex items-center gap-6 shrink-0">
         <div className="flex flex-col items-end hidden sm:flex">
           <span className="text-display font-bold text-5xl tracking-tighter text-on-surface-variant group-hover:text-primary transition-colors">{streakCount}</span>
-          <span className="text-xs font-bold font-sans uppercase text-outline-variant tracking-widest">Strikes</span>
+          <span className="text-xs font-bold font-sans uppercase text-outline-variant tracking-widest">{t('habit_strikes_label')}</span>
         </div>
         <div className="flex items-center gap-3">
           {target && target > 1 && !isCompletedToday && (
@@ -74,12 +76,11 @@ function HabitItem({ habit, index, listLayout, onClick }: { habit: Habit, index:
                 toggleStrike(today, target, target).then(played => played && playStrikeSound());
               }}
               className="w-12 h-12 rounded-full bg-white text-black flex items-center justify-center font-bold text-2xl active:scale-90 transition-transform shadow-ambient"
-              title="Complete Full Strike"
             >
               +
             </button>
           )}
-          <button onClick={handleFastStrike} className="w-16 h-16 active:scale-95 transition-transform shrink-0" title={target ? "Add 5 Units" : "Strike"}>
+          <button onClick={handleFastStrike} className="w-16 h-16 active:scale-95 transition-transform shrink-0">
             <DynamicGoalShape target={target} progress={currentProgress} />
           </button>
         </div>
@@ -90,6 +91,7 @@ function HabitItem({ habit, index, listLayout, onClick }: { habit: Habit, index:
 
 export function HabitList() {
   const { habits } = useHabits();
+  const { t } = useTranslation();
   const [listLayout, setListLayout] = useState<'extended' | 'compact'>('compact');
   const [selectedHabitId, setSelectedHabitId] = useState<string | null>(null);
 
@@ -100,8 +102,8 @@ export function HabitList() {
   if (!habits || habits.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center h-[60vh] text-center px-6">
-        <h2 className="font-display font-bold text-3xl mb-4 text-on-surface-variant">The Void Awaits.</h2>
-        <p className="font-sans text-outline-variant max-w-sm">Tap the plus below to forge your first monolithic habit.</p>
+        <h2 className="font-display font-bold text-3xl mb-4 text-on-surface-variant">{t('void_title')}</h2>
+        <p className="font-sans text-outline-variant max-w-sm">{t('void_subtitle')}</p>
       </div>
     );
   }
@@ -109,12 +111,12 @@ export function HabitList() {
   return (
     <div className="flex flex-col gap-6 pb-32 pt-12 px-4 sm:px-6 max-w-2xl mx-auto w-full">
       <header className="mb-6">
-        <h1 className="font-display font-bold text-5xl tracking-tight text-primary">Momentum</h1>
-        <p className="font-sans text-on-surface-variant mt-2 text-lg">Strike the monolith daily.</p>
+        <h1 className="font-display font-bold text-5xl tracking-tight text-primary">{t('momentum_title')}</h1>
+        <p className="font-sans text-on-surface-variant mt-2 text-lg">{t('momentum_subtitle')}</p>
         
         <div className="flex gap-2 mt-8 p-1 bg-surface-container-high rounded-full w-fit">
-          <button onClick={() => setListLayout('extended')} className={cn("px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-widest transition-colors", listLayout === 'extended' ? "bg-primary text-on-primary" : "text-outline-variant hover:text-primary")}>Extended</button>
-          <button onClick={() => setListLayout('compact')} className={cn("px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-widest transition-colors", listLayout === 'compact' ? "bg-primary text-on-primary" : "text-outline-variant hover:text-primary")}>Compact</button>
+          <button onClick={() => setListLayout('extended')} className={cn("px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-widest transition-colors", listLayout === 'extended' ? "bg-primary text-on-primary" : "text-outline-variant hover:text-primary")}>{t('habit_layout_extended')}</button>
+          <button onClick={() => setListLayout('compact')} className={cn("px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-widest transition-colors", listLayout === 'compact' ? "bg-primary text-on-primary" : "text-outline-variant hover:text-primary")}>{t('habit_layout_compact')}</button>
         </div>
       </header>
       <div className={cn(
